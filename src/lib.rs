@@ -29,48 +29,48 @@ mod ruian_date_format {
 }
 
 #[derive(Deserialize, Debug)]
-pub(crate) struct CzechAddress {
+pub struct CzechAddress {
     #[serde(rename = "Kód ADM")]
-    pub(crate) adm_code: u32,
+    pub adm_code: u32,
     #[serde(rename = "Kód obce")]
-    pub(crate) town_code: u32,
+    pub town_code: u32,
     #[serde(rename = "Název obce")]
-    pub(crate) town: String,
+    pub town: String,
     #[serde(rename = "Kód MOMC")]
-    pub(crate) city_part_code: Option<u64>,
+    pub city_part_code: Option<u64>,
     #[serde(rename = "Název MOMC")]
-    pub(crate) city_part: Option<String>,
+    pub city_part: Option<String>,
     #[serde(rename = "Kód obvodu Prahy")]
-    pub(crate) prague_part_code: Option<u64>,
+    pub prague_part_code: Option<u64>,
     #[serde(rename = "Název obvodu Prahy")]
-    pub(crate) prague_part: Option<String>,
+    pub prague_part: Option<String>,
     #[serde(rename = "Název části obce")]
-    pub(crate) town_part: String,
+    pub town_part: String,
     #[serde(rename = "Kód části obce")]
-    pub(crate) town_part_code: u32,
+    pub town_part_code: u32,
     #[serde(rename = "Kód ulice")]
-    pub(crate) street_code: Option<u32>,
+    pub street_code: Option<u32>,
     #[serde(rename = "Název ulice")]
-    pub(crate) street: Option<String>,
+    pub street: Option<String>,
     #[serde(rename = "Typ SO")]
-    pub(crate) object_type: String,
+    pub object_type: String,
     #[serde(rename = "Číslo domovní")]
-    pub(crate) number: u32,
+    pub number: u32,
     #[serde(rename = "Číslo orientační")]
-    pub(crate) orientation_number: Option<u32>,
+    pub orientation_number: Option<u32>,
     #[serde(rename = "Znak čísla orientačního")]
-    pub(crate) orientation_number_sign: Option<String>,
+    pub orientation_number_sign: Option<String>,
     #[serde(rename = "PSČ")]
-    pub(crate) zip_code: u32,
+    pub zip_code: u32,
     #[serde(rename = "Souřadnice X")]
-    pub(crate) location_x: Option<f32>,
+    pub location_x: Option<f32>,
     #[serde(rename = "Souřadnice Y")]
-    pub(crate) location_y: Option<f32>,
+    pub location_y: Option<f32>,
     #[serde(rename = "Platí Od", with = "ruian_date_format")]
-    pub(crate) valid_since: DateTime<Utc>,
+    pub valid_since: DateTime<Utc>,
 }
 
-pub(crate) fn parse_addresses_from_csv(path: PathBuf) -> anyhow::Result<Vec<CzechAddress>> {
+pub fn parse_addresses_from_csv(path: PathBuf) -> anyhow::Result<Vec<CzechAddress>> {
     let (tx, rx) = mpsc::channel();
 
     spawn(move || {
