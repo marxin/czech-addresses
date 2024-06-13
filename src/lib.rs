@@ -1,10 +1,15 @@
-use std::{fs::File, path::PathBuf};
+use std::{
+    fs::File,
+    io::{self},
+    path::PathBuf,
+};
 
 use chrono::{DateTime, Utc};
 use encoding_rs_io::DecodeReaderBytesBuilder;
 use serde::Deserialize;
+use thiserror::Error;
 
-mod ruian_date_format {
+mod address_date_format {
     use std::str::FromStr;
 
     use chrono::{DateTime, Utc};
@@ -58,8 +63,18 @@ pub struct CzechAddress {
     pub location_x: Option<f32>,
     #[serde(rename = "Souřadnice Y")]
     pub location_y: Option<f32>,
-    #[serde(rename = "Platí Od", with = "ruian_date_format")]
+    #[serde(rename = "Platí Od", with = "address_date_format")]
     pub valid_since: DateTime<Utc>,
+}
+
+#[derive(Error, Debug)]
+pub enum AddressError {
+    #[error("IO error")]
+    Io(#[from] io::Error),
+    #[error("ZIP error")]
+    Zip(#[from] zip::result::ZipError),
+    #[error("CSV error")]
+    Csv(#[from] csv::Error),
 }
 
 pub fn parse_addresses_from_csv(path: PathBuf) -> anyhow::Result<Vec<CzechAddress>> {
