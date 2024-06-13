@@ -6,7 +6,7 @@ use std::{
     thread::spawn,
 };
 
-use chrono::{DateTime, Utc};
+use chrono::{naive::serde::ts_microseconds::deserialize, DateTime, Utc};
 use encoding_rs_io::DecodeReaderBytesBuilder;
 use rayon::iter::{ParallelBridge, ParallelIterator};
 use serde::Deserialize;
@@ -71,39 +71,20 @@ pub struct CzechAddress {
 }
 
 pub fn parse_addresses_from_csv(path: PathBuf) -> anyhow::Result<Vec<CzechAddress>> {
-    let (tx, rx) = mpsc::channel();
-
-    spawn(move || {
-        let mut zip = zip::ZipArchive::new(File::open(path).unwrap()).unwrap();
-        let mut zip_files: Vec<_> = (0..zip.len())
-            .map(|i| (i, zip.by_index(i).unwrap().size()))
-            .collect();
-        zip_files.sort_by(|a, b| b.1.cmp(&a.1));
-
-        for (i, _) in zip_files {
-            let mut zip_file = zip.by_index(i).unwrap();
-            let mut buffer = Vec::new();
-            buffer.reserve_exact(zip_file.size() as usize);
-            zip_file.read_to_end(&mut buffer).unwrap();
-            tx.send(buffer).unwrap();
-        }
-    });
-
-    Ok(rx
-        .into_iter()
-        .par_bridge()
-        .map(|content| {
-            let decoder = DecodeReaderBytesBuilder::new()
-                .encoding(Some(encoding_rs::WINDOWS_1250))
-                .build(BufReader::with_capacity(1024 * 1024, Cursor::new(content)));
-            let mut rdr = csv::ReaderBuilder::new()
-                .delimiter(b';')
-                .has_headers(true)
-                .from_reader(decoder);
-            rdr.deserialize().map(|a| a.unwrap()).collect::<Vec<_>>()
-        })
-        .flatten()
-        .collect())
+    let mut addresses = Vec::new();
+    let mut zip = zip::ZipArchive::new(File::open(path)?)?;
+    for i in 0..zip.len() {
+        let csv_file = zip.by_index(i)?;
+        let decoder = DecodeReaderBytesBuilder::new()
+            .encoding(Some(encoding_rs::WINDOWS_1250))
+            .build(csv_file);
+        let mut rdr = csv::ReaderBuilder::new()
+            .delimiter(b';')
+            .has_headers(true)
+            .from_reader(decoder);
+        addresses.extend(rdr.deserialize().collect::<Result<Vec<_>, _>>()?);
+    }
+    Ok(addresses)
 }
 
 #[cfg(test)]
