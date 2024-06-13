@@ -85,20 +85,25 @@ mod tests {
     use std::str::FromStr;
 
     #[test]
-    fn parse_all_addresses() {
-        let addresses =
-            parse_addresses_from_csv(PathBuf::from_str("20240531_OB_ADR_csv.zip").unwrap())
-                .unwrap();
+    fn parse_addresses() {
+        let csv_archive_path = PathBuf::from_str("20240531_OB_ADR_csv.zip").unwrap();
+        if !csv_archive_path.exists() {
+            let mut response = reqwest::blocking::get(
+                "https://vdp.cuzk.cz/vymenny_format/csv/20240531_OB_ADR_csv.zip",
+            )
+            .unwrap();
+
+            let mut file = File::create_new(csv_archive_path.clone()).unwrap();
+            response.copy_to(&mut file).unwrap();
+        }
+
+        let addresses = parse_addresses_from_csv(csv_archive_path).unwrap();
 
         assert!(addresses.len() > 2_000_000);
 
-        for addr in addresses.iter().filter(|a| {
-            a.town == "Golčův Jeníkov"
-                && a.street == Some("Nám. T. G. Masaryka".to_string())
-                && a.number == 110
-        }) {
-            dbg!(addr);
-        }
-        panic!();
+        let address = addresses.iter().find(|a| a.adm_code == 9382372).unwrap();
+        assert_eq!(address.town, "Golčův Jeníkov");
+        assert_eq!(address.street, Some("Nám. T. G. Masaryka".to_string()));
+        assert_eq!(address.number, 110);
     }
 }
