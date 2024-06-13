@@ -1,8 +1,4 @@
-use std::{
-    fs::File,
-    io::{self},
-    path::PathBuf,
-};
+use std::io::{self, Read, Seek};
 
 use chrono::{DateTime, Utc};
 use encoding_rs_io::DecodeReaderBytesBuilder;
@@ -77,9 +73,9 @@ pub enum AddressError {
     Csv(#[from] csv::Error),
 }
 
-pub fn parse_addresses_from_csv(path: PathBuf) -> anyhow::Result<Vec<Address>> {
+pub fn parse_addresses_from_csv(reader: impl Read + Seek) -> anyhow::Result<Vec<Address>> {
     let mut addresses = Vec::new();
-    let mut zip = zip::ZipArchive::new(File::open(path)?)?;
+    let mut zip = zip::ZipArchive::new(reader)?;
     for i in 0..zip.len() {
         let csv_file = zip.by_index(i)?;
         let decoder = DecodeReaderBytesBuilder::new()
@@ -97,7 +93,7 @@ pub fn parse_addresses_from_csv(path: PathBuf) -> anyhow::Result<Vec<Address>> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::str::FromStr;
+    use std::{fs::File, path::PathBuf, str::FromStr};
 
     #[test]
     fn parse_addresses() {
@@ -112,7 +108,7 @@ mod tests {
             response.copy_to(&mut file).unwrap();
         }
 
-        let addresses = parse_addresses_from_csv(csv_archive_path).unwrap();
+        let addresses = parse_addresses_from_csv(File::open(csv_archive_path).unwrap()).unwrap();
 
         assert!(addresses.len() > 2_000_000);
 
