@@ -1,21 +1,14 @@
-use std::{
-    fs::File,
-    io::{BufReader, Cursor, Read},
-    path::PathBuf,
-    sync::mpsc,
-    thread::spawn,
-};
+use std::{fs::File, path::PathBuf};
 
-use chrono::{naive::serde::ts_microseconds::deserialize, DateTime, Utc};
+use chrono::{DateTime, Utc};
 use encoding_rs_io::DecodeReaderBytesBuilder;
-use rayon::iter::{ParallelBridge, ParallelIterator};
 use serde::Deserialize;
 
 mod ruian_date_format {
     use std::str::FromStr;
 
     use chrono::{DateTime, Utc};
-    use serde::{self, Deserialize, Deserializer};
+    use serde::{self, de, Deserialize, Deserializer};
 
     pub fn deserialize<'de, D>(deserializer: D) -> Result<DateTime<Utc>, D::Error>
     where
@@ -23,8 +16,7 @@ mod ruian_date_format {
     {
         let mut s = String::deserialize(deserializer)?;
         s.push('Z');
-        // TODO
-        Ok(DateTime::<Utc>::from_str(&s).unwrap())
+        DateTime::<Utc>::from_str(&s).map_err(de::Error::custom)
     }
 }
 
