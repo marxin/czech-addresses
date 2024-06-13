@@ -26,7 +26,7 @@ mod address_date_format {
 }
 
 #[derive(Deserialize, Debug)]
-pub struct CzechAddress {
+pub struct Address {
     #[serde(rename = "Kód ADM")]
     pub adm_code: u32,
     #[serde(rename = "Kód obce")]
@@ -77,7 +77,7 @@ pub enum AddressError {
     Csv(#[from] csv::Error),
 }
 
-pub fn parse_addresses_from_csv(path: PathBuf) -> anyhow::Result<Vec<CzechAddress>> {
+pub fn parse_addresses_from_csv(path: PathBuf) -> anyhow::Result<Vec<Address>> {
     let mut addresses = Vec::new();
     let mut zip = zip::ZipArchive::new(File::open(path)?)?;
     for i in 0..zip.len() {
