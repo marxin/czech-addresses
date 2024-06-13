@@ -1,6 +1,8 @@
 [package]
 name = "czech-addresses"
 version = "0.1.0"
+license = "MIT OR Apache-2.0"
+description = "Parses the Czech Republic addresses provided by RUIAN."
 edition = "2021"
 
 [dependencies]
